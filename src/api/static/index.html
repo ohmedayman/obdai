@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام التشخيص الكهربائي الذكي OBD-II | Smart AI Mechanic</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Cairo -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            500: '#4f46e5',
+                            600: '#4338ca',
+                            700: '#3730a3',
+                            800: '#1e1b4b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+        }
+        .chat-bubble-user {
+            background: linear-gradient(135deg, #4f46e5, #4338ca);
+            color: white;
+            border-bottom-left-radius: 4px;
+        }
+        .chat-bubble-assistant {
+            background: #ffffff;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+            border-bottom-right-radius: 4px;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-slate-800/80 border-b border-slate-700/60 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <i class="fa-solid fa-car-battery text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-white tracking-wide">Smart OBD-II Electrical AI</h1>
+                    <p class="text-xs text-indigo-300">منصة التشخيص الكهربائي التنبؤي ومساعد السائق الذكي</p>
+                </div>
+            </div>
+
+            <!-- Status Indicator -->
+            <div class="flex items-center space-x-4 space-x-reverse">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 ml-2 animate-pulse"></span>
+                    خادم الذكاء الاصطناعي متصل
+                </span>
+                <a href="/docs" target="_blank" class="hidden sm:inline-flex items-center text-xs text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-book ml-1.5"></i> التوثيق API
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT COLUMN: Live Telemetry & Control Panel (lg:col-span-7) -->
+        <div class="lg:col-span-7 space-y-6">
+
+            <!-- Presets / Quick Test Cases -->
+            <div class="bg-slate-800/90 rounded-2xl p-5 border border-slate-700/70 shadow-xl">
+                <h2 class="text-sm font-bold text-slate-300 mb-3 flex items-center">
+                    <i class="fa-solid fa-sliders text-indigo-400 ml-2"></i>
+                    تجارب المحاكاة السريعة (Quick Scenario Presets)
+                </h2>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <button onclick="loadScenario('healthy')" class="px-3 py-2.5 rounded-xl bg-slate-700/50 hover:bg-emerald-600/20 hover:border-emerald-500/40 border border-slate-600/40 text-xs font-bold text-emerald-400 transition flex flex-col items-center justify-center space-y-1">
+                        <i class="fa-solid fa-circle-check text-base"></i>
+                        <span>سيارة سليمة</span>
+                    </button>
+                    <button onclick="loadScenario('battery')" class="px-3 py-2.5 rounded-xl bg-slate-700/50 hover:bg-amber-600/20 hover:border-amber-500/40 border border-slate-600/40 text-xs font-bold text-amber-400 transition flex flex-col items-center justify-center space-y-1">
+                        <i class="fa-solid fa-battery-quarter text-base"></i>
+                        <span>بطارية ضعيفة</span>
+                    </button>
+                    <button onclick="loadScenario('alternator_under')" class="px-3 py-2.5 rounded-xl bg-slate-700/50 hover:bg-rose-600/20 hover:border-rose-500/40 border border-slate-600/40 text-xs font-bold text-rose-400 transition flex flex-col items-center justify-center space-y-1">
+                        <i class="fa-solid fa-triangle-exclamation text-base"></i>
+                        <span>خلل دينامو (ضعيف)</span>
+                    </button>
+                    <button onclick="loadScenario('drain')" class="px-3 py-2.5 rounded-xl bg-slate-700/50 hover:bg-purple-600/20 hover:border-purple-500/40 border border-slate-600/40 text-xs font-bold text-purple-400 transition flex flex-col items-center justify-center space-y-1">
+                        <i class="fa-solid fa-bolt text-base"></i>
+                        <span>تسريب / مقاومة</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Telemetry Parameters Form -->
+            <div class="bg-slate-800/90 rounded-2xl p-5 border border-slate-700/70 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                    <h2 class="text-sm font-bold text-slate-200 flex items-center">
+                        <i class="fa-solid fa-gauge-high text-indigo-400 ml-2"></i>
+                        قراءات الحساسات الكهربائية (OBD-II Telemetry)
+                    </h2>
+                    <span class="text-xs text-slate-400">تحكم لحظي بالقراءات</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <!-- Resting Voltage -->
+                    <div>
+                        <label class="block text-slate-300 font-semibold mb-1">جهد السكون (Resting V):</label>
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <input type="number" step="0.1" id="input_resting_v" value="12.6" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 outline-none">
+                            <span class="text-slate-400 font-bold">V</span>
+                        </div>
+                    </div>
+
+                    <!-- Min Cranking Voltage -->
+                    <div>
+                        <label class="block text-slate-300 font-semibold mb-1">أدنى جهد أثناء التدوير (Cranking Min):</label>
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <input type="number" step="0.1" id="input_cranking_v" value="10.6" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 outline-none">
+                            <span class="text-slate-400 font-bold">V</span>
+                        </div>
+                    </div>
+
+                    <!-- Running Voltage Mean -->
+                    <div>
+                        <label class="block text-slate-300 font-semibold mb-1">متوسط شحن الدينامو (Running V):</label>
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <input type="number" step="0.1" id="input_running_v" value="14.2" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 outline-none">
+                            <span class="text-slate-400 font-bold">V</span>
+                        </div>
+                    </div>
+
+                    <!-- Load Voltage Drop -->
+                    <div>
+                        <label class="block text-slate-300 font-semibold mb-1">هبوط الجهد تحت الحمل (Load Drop):</label>
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <input type="number" step="0.05" id="input_load_drop" value="0.1" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 outline-none">
+                            <span class="text-slate-400 font-bold">V</span>
+                        </div>
+                    </div>
+
+                    <!-- Voltage Ripple -->
+                    <div>
+                        <label class="block text-slate-300 font-semibold mb-1">تذبذب الجهد (AC Ripple):</label>
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <input type="number" step="0.01" id="input_ripple" value="0.02" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 outline-none">
+                            <span class="text-slate-400 font-bold">V</span>
+                        </div>
+                    </div>
+
+                    <!-- Engine RPM -->
+                    <div>
+                        <label class="block text-slate-300 font-semibold mb-1">سرعة دوران المحرك (RPM):</label>
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <input type="number" step="50" id="input_rpm" value="850" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 outline-none">
+                            <span class="text-slate-400 font-bold">RPM</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Run AI Diagnostic Button -->
+                <button onclick="runAIDiagnostic()" id="btn_run_diag" class="w-full py-3.5 mt-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition flex items-center justify-center space-x-2 space-x-reverse">
+                    <i class="fa-solid fa-microchip text-base"></i>
+                    <span>تشغيل الفحص والتشخيص الذكي (Run AI Diagnostic)</span>
+                </button>
+            </div>
+
+            <!-- AI Diagnostic Card Output -->
+            <div id="diagnostic_result_box" class="bg-slate-800/90 rounded-2xl p-5 border border-slate-700/70 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                    <h3 class="text-sm font-bold text-slate-200 flex items-center">
+                        <i class="fa-solid fa-square-poll-vertical text-amber-400 ml-2"></i>
+                        تقرير التنبيه والتقييم الكهربائي
+                    </h3>
+                    <span id="badge_risk" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        سليم (LOW RISK)
+                    </span>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <h4 id="diag_title" class="text-base font-bold text-white">المنظومة الكهربائية تعمل بكفاءة ممتازة ✅</h4>
+                        <p id="diag_summary" class="text-xs text-slate-300 mt-1 leading-relaxed">
+                            جهد البطارية والشحن الكهربائي من الدينامو ضمن الحدود الهندسية القياسية، ولا توجد أي مؤشرات لتسريب تيار أو هبوط في الجهد.
+                        </p>
+                    </div>
+
+                    <!-- Driveability badge -->
+                    <div id="driveability_badge" class="flex items-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-semibold">
+                        <i class="fa-solid fa-shield-halved text-base ml-2"></i>
+                        <span>القيادة آمنة تماماً ولا توجد مخاطر على حواسيب السيارة أو البطارية.</span>
+                    </div>
+
+                    <!-- Recommended Action -->
+                    <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-700/50 space-y-1.5">
+                        <div class="text-xs font-bold text-indigo-300 flex items-center">
+                            <i class="fa-solid fa-wrench ml-1.5"></i> الإجراء الموصى به لسائق السيارة:
+                        </div>
+                        <p id="diag_action" class="text-xs text-slate-300 leading-relaxed">
+                            لا يتطلب أي إجراء صيانة حالياً. استمر في القيادة بشكل طبيعي مع الفحص الدوري المعتاد.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: AI Mechanic Chat Interface (lg:col-span-5) -->
+        <div class="lg:col-span-5 flex flex-col h-[700px] bg-slate-800/90 rounded-2xl border border-slate-700/70 shadow-2xl overflow-hidden">
+            
+            <!-- Chat Header -->
+            <div class="p-4 bg-gradient-to-r from-slate-800 to-indigo-950 border-b border-slate-700 flex items-center justify-between">
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="relative">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md">
+                            <i class="fa-solid fa-user-astronaut text-lg"></i>
+                        </div>
+                        <span class="absolute bottom-0 left-0 w-3 h-3 bg-emerald-400 border-2 border-slate-800 rounded-full"></span>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white">ميكانيكي الذكاء الاصطناعي</h3>
+                        <p class="text-[11px] text-indigo-300">مساعد تشخيص الأعطال باللغة العربية (LLM)</p>
+                    </div>
+                </div>
+                <button onclick="clearChat()" title="مسح المحادثة" class="text-slate-400 hover:text-white text-xs px-2 py-1 rounded-lg hover:bg-slate-700/50 transition">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+
+            <!-- Quick Suggestion Chips -->
+            <div class="px-4 py-2.5 bg-slate-900/60 border-b border-slate-700/50 flex space-x-2 space-x-reverse overflow-x-auto text-[11px]">
+                <button onclick="sendQuickPrompt('هل أستطيع متابعة السفر بالسيارة بالوضع الحالي؟')" class="whitespace-nowrap px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600/30 text-indigo-300 border border-slate-700 hover:border-indigo-500/50 transition">
+                    🚗 هل أستطيع متابعة السفر؟
+                </button>
+                <button onclick="sendQuickPrompt('كيف أتأكد هل المشكلة من البطارية أم الدينامو؟')" class="whitespace-nowrap px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600/30 text-indigo-300 border border-slate-700 hover:border-indigo-500/50 transition">
+                    🔋 فحص البطارية أم الدينامو؟
+                </button>
+                <button onclick="sendQuickPrompt('ما هي خطوات فحص أصابع وكابلات البطارية بنفسي؟')" class="whitespace-nowrap px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600/30 text-indigo-300 border border-slate-700 hover:border-indigo-500/50 transition">
+                    🛠️ خطوات الفحص الذاتي DIY
+                </button>
+            </div>
+
+            <!-- Messages Stream Area -->
+            <div id="chat_messages" class="flex-1 p-4 space-y-3.5 overflow-y-auto bg-slate-900/40 text-xs">
+                <!-- Welcome Message from Assistant -->
+                <div class="flex items-start space-x-2.5 space-x-reverse">
+                    <div class="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div class="chat-bubble-assistant p-3.5 rounded-2xl shadow-sm max-w-[85%] leading-relaxed text-slate-800 text-xs">
+                        مرحباً بك! أنا <strong>خبير تشخيص كهرباء السيارات الذكي</strong> 🚗⚡
+                        <br><br>
+                        أنا متصل مباشرة بالقراءات الحالية لسيارتك. يمكنك سؤالي عن أي عطل، أو استشارتي عن إمكانية متابعة القيادة وكيفية إصلاح المشاكل بنفسك.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Input Area -->
+            <div class="p-3.5 bg-slate-800 border-t border-slate-700">
+                <form onsubmit="handleChatSubmit(event)" class="flex items-center space-x-2 space-x-reverse">
+                    <input 
+                        type="text" 
+                        id="chat_input" 
+                        placeholder="اسأل الميكانيكي الذكي عن حالة سيارتك..." 
+                        class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                        autocomplete="off"
+                    >
+                    <button 
+                        type="submit" 
+                        id="btn_send_chat" 
+                        class="w-10 h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center transition shadow-md shadow-indigo-600/30 disabled:opacity-50"
+                    >
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </button>
+                </form>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-800 py-3 text-center text-xs text-slate-400">
+        مشروع تخرج: <strong>Smart OBD-II Electrical Diagnostic System</strong> &copy; 2026
+    </footer>
+
+    <!-- Client-Side JavaScript Logic -->
+    <script>
+        let chatHistory = [];
+        let currentVehicleContext = {
+            current_voltage: 12.6,
+            min_cranking_voltage: 10.6,
+            running_voltage: 14.2,
+            engine_state: "IDLE"
+        };
+
+        // Preset Scenarios
+        function loadScenario(type) {
+            if (type === 'healthy') {
+                document.getElementById('input_resting_v').value = 12.6;
+                document.getElementById('input_cranking_v').value = 10.7;
+                document.getElementById('input_running_v').value = 14.2;
+                document.getElementById('input_load_drop').value = 0.1;
+                document.getElementById('input_ripple').value = 0.02;
+                document.getElementById('input_rpm').value = 850;
+            } else if (type === 'battery') {
+                document.getElementById('input_resting_v').value = 11.8;
+                document.getElementById('input_cranking_v').value = 8.1;
+                document.getElementById('input_running_v').value = 14.1;
+                document.getElementById('input_load_drop').value = 0.15;
+                document.getElementById('input_ripple').value = 0.02;
+                document.getElementById('input_rpm').value = 800;
+            } else if (type === 'alternator_under') {
+                document.getElementById('input_resting_v').value = 12.3;
+                document.getElementById('input_cranking_v').value = 10.2;
+                document.getElementById('input_running_v').value = 12.2;
+                document.getElementById('input_load_drop').value = 0.6;
+                document.getElementById('input_ripple').value = 0.03;
+                document.getElementById('input_rpm').value = 900;
+            } else if (type === 'drain') {
+                document.getElementById('input_resting_v').value = 12.2;
+                document.getElementById('input_cranking_v').value = 10.1;
+                document.getElementById('input_running_v').value = 14.0;
+                document.getElementById('input_load_drop').value = 1.3;
+                document.getElementById('input_ripple').value = 0.02;
+                document.getElementById('input_rpm').value = 850;
+            }
+            runAIDiagnostic();
+        }
+
+        // Run AI Diagnostic API Call
+        async function runAIDiagnostic() {
+            const btn = document.getElementById('btn_run_diag');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-2"></i> جاري تحليل الإشارات الكهربائية...';
+
+            const resting_v = parseFloat(document.getElementById('input_resting_v').value);
+            const crank_v = parseFloat(document.getElementById('input_cranking_v').value);
+            const running_v = parseFloat(document.getElementById('input_running_v').value);
+            const load_drop = parseFloat(document.getElementById('input_load_drop').value);
+            const ripple = parseFloat(document.getElementById('input_ripple').value);
+            const rpm = parseFloat(document.getElementById('input_rpm').value);
+
+            currentVehicleContext = {
+                resting_voltage_v: resting_v,
+                min_cranking_voltage_v: crank_v,
+                cranking_voltage_sag_v: resting_v - crank_v,
+                running_voltage_mean_v: running_v,
+                running_voltage_std_v: 0.04,
+                voltage_under_load_mean_v: running_v - load_drop,
+                load_voltage_drop_v: load_drop,
+                voltage_ripple_mean_v: ripple,
+                avg_engine_rpm: rpm,
+                include_llm_advisory: false
+            };
+
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(currentVehicleContext)
+                });
+
+                const data = await response.json();
+                updateDiagnosticUI(data);
+
+            } catch (err) {
+                console.error("Diagnostic error:", err);
+                alert("تعذر الاتصال بخادم الذكاء الاصطناعي.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-microchip text-base ml-2"></i><span>تشغيل الفحص والتشخيص الذكي (Run AI Diagnostic)</span>';
+            }
+        }
+
+        function updateDiagnosticUI(data) {
+            document.getElementById('diag_title').innerText = data.title_ar;
+            document.getElementById('diag_summary').innerText = data.summary_ar;
+            document.getElementById('diag_action').innerText = data.recommended_action_ar;
+
+            const badgeRisk = document.getElementById('badge_risk');
+            const driveBadge = document.getElementById('driveability_badge');
+
+            if (data.risk_level === 'LOW') {
+                badgeRisk.className = "px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                badgeRisk.innerText = "سليم ومستقر (LOW)";
+                driveBadge.className = "flex items-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-semibold";
+                driveBadge.innerHTML = '<i class="fa-solid fa-shield-halved text-base ml-2"></i><span>القيادة آمنة تماماً ولا توجد مخاطر على المنظومة الكهربائية.</span>';
+            } else if (data.risk_level === 'MEDIUM') {
+                badgeRisk.className = "px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30";
+                badgeRisk.innerText = "تحذير متوسط (MEDIUM)";
+                driveBadge.className = "flex items-center p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-semibold";
+                driveBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-base ml-2"></i><span>القيادة ممكنة بحذر حتى أقرب مركز صيانة.</span>';
+            } else {
+                badgeRisk.className = "px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 animate-pulse";
+                badgeRisk.innerText = "خطر حرج (CRITICAL)";
+                driveBadge.className = "flex items-center p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-semibold";
+                driveBadge.innerHTML = '<i class="fa-solid fa-hand text-base ml-2"></i><span>غير آمن للقيادة! خطر انطفاء المحرك المفاجئ أو تلف الحواسيب.</span>';
+            }
+        }
+
+        // Chat Logic
+        async function handleChatSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat_input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            input.value = '';
+            appendMessage('user', message);
+
+            const sendBtn = document.getElementById('btn_send_chat');
+            sendBtn.disabled = true;
+
+            // Append temporary thinking bubble
+            const thinkingId = appendThinkingBubble();
+
+            try {
+                const response = await fetch('/api/advisor/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: message,
+                        chat_history: chatHistory,
+                        vehicle_context: currentVehicleContext
+                    })
+                });
+
+                const data = await response.json();
+                removeThinkingBubble(thinkingId);
+                appendMessage('assistant', data.response_ar);
+
+                // Update chat history
+                chatHistory.push({ role: 'user', content: message });
+                chatHistory.push({ role: 'assistant', content: data.response_ar });
+
+            } catch (err) {
+                console.error("Chat error:", err);
+                removeThinkingBubble(thinkingId);
+                appendMessage('assistant', "⚠️ حدث خطأ أثناء الاتصال بالمساعد الذكي. يرجى المحاولة لاحقاً.");
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+
+        function sendQuickPrompt(text) {
+            document.getElementById('chat_input').value = text;
+            document.getElementById('btn_send_chat').click();
+        }
+
+        function appendMessage(role, text) {
+            const container = document.getElementById('chat_messages');
+            const msgDiv = document.createElement('div');
+
+            if (role === 'user') {
+                msgDiv.className = "flex items-start justify-end space-x-2.5 space-x-reverse";
+                msgDiv.innerHTML = `
+                    <div class="chat-bubble-user p-3.5 rounded-2xl shadow-sm max-w-[85%] leading-relaxed text-xs">
+                        ${escapeHtml(text)}
+                    </div>
+                    <div class="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                `;
+            } else {
+                msgDiv.className = "flex items-start space-x-2.5 space-x-reverse";
+                msgDiv.innerHTML = `
+                    <div class="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div class="chat-bubble-assistant p-3.5 rounded-2xl shadow-sm max-w-[85%] leading-relaxed text-slate-800 text-xs">
+                        ${formatMarkdown(text)}
+                    </div>
+                `;
+            }
+
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function appendThinkingBubble() {
+            const container = document.getElementById('chat_messages');
+            const id = 'thinking_' + Date.now();
+            const msgDiv = document.createElement('div');
+            msgDiv.id = id;
+            msgDiv.className = "flex items-start space-x-2.5 space-x-reverse";
+            msgDiv.innerHTML = `
+                <div class="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5 animate-pulse">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div class="chat-bubble-assistant p-3 rounded-2xl shadow-sm text-slate-500 text-xs flex items-center space-x-2 space-x-reverse">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <span>الميكانيكي الذكي يحلل القراءات ويفكر...</span>
+                </div>
+            `;
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+            return id;
+        }
+
+        function removeThinkingBubble(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        function clearChat() {
+            chatHistory = [];
+            const container = document.getElementById('chat_messages');
+            container.innerHTML = `
+                <div class="flex items-start space-x-2.5 space-x-reverse">
+                    <div class="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div class="chat-bubble-assistant p-3.5 rounded-2xl shadow-sm max-w-[85%] leading-relaxed text-slate-800 text-xs">
+                        تمت إعادة تهيئة المحادثة. كيف يمكنني مساعدتك بخصوص كهرباء سيارتك اليوم؟ ⚡
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.innerText = text;
+            return div.innerHTML;
+        }
+
+        function formatMarkdown(text) {
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+        }
+    </script>
+</body>
+</html>

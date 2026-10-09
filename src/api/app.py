@@ -67,8 +67,22 @@ except Exception as e:
 advisor = AutomotiveLLMAdvisor()
 
 
-@app.get("/")
+from fastapi.responses import HTMLResponse
+
+STATIC_INDEX_PATH = PROJECT_ROOT / "src" / "api" / "static" / "index.html"
+
+
+@app.get("/", response_class=HTMLResponse)
 def root():
+    """Serves the interactive Arabic AI Mechanic & Telemetry Web Dashboard."""
+    if STATIC_INDEX_PATH.exists():
+        with open(STATIC_INDEX_PATH, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse("<h2>Smart OBD-II Electrical AI Backend Online</h2><p><a href='/docs'>Swagger API Docs</a></p>")
+
+
+@app.get("/api/status")
+def system_status():
     return {
         "system": "Smart OBD-II Electrical Diagnostic System",
         "version": "1.0.0",
@@ -76,6 +90,7 @@ def root():
         "models_loaded": rf_model is not None,
         "docs_url": "/docs",
     }
+
 
 
 @app.post("/api/predict", response_model=DiagnosticAlertResponse)
