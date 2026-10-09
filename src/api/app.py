@@ -185,7 +185,7 @@ def chat_with_mechanic_endpoint(request: MechanicChatRequest):
 
 
 @app.post("/api/settings/test-key", response_model=TestKeyResponseSchema)
-def test_llm_key(config: Optional[APIConfigSchema] = None):
+def test_llm_key(config: APIConfigSchema = None):
     """
     Tests live connection with the specified or current API Key and Provider.
     """
@@ -208,6 +208,7 @@ def test_llm_key(config: Optional[APIConfigSchema] = None):
         message=res.get("message"),
         error_message=res.get("error_message"),
     )
+
 
 
 @app.post("/api/settings/update-key")

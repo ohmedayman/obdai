@@ -46,12 +46,13 @@ class AutomotiveLLMAdvisor:
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         model_name: Optional[str] = None,
-        timeout_sec: int = 15,
+        timeout_sec: int = 20,
     ):
-        self.api_key = api_key or os.getenv("LLM_API_KEY", "")
-        self.base_url = (base_url or os.getenv("LLM_BASE_URL", "https://api.deepseek.com/v1")).rstrip("/")
-        self.model_name = model_name or os.getenv("LLM_MODEL", "deepseek-chat")
+        self.api_key = api_key or os.getenv("LLM_API_KEY", "sk-8e872c0d18aed5b33cf2adbe5cdbbbeccfe17c4e131436bf9459a0899ff8c3f6")
+        self.base_url = (base_url or os.getenv("LLM_BASE_URL", "https://api.5abeer.ai/v1")).rstrip("/")
+        self.model_name = model_name or os.getenv("LLM_MODEL", "gpt-5.2")
         self.timeout_sec = timeout_sec
+
 
     def update_config(self, api_key: str, base_url: Optional[str] = None, model_name: Optional[str] = None) -> None:
         """Dynamically updates the LLM configuration at runtime and saves to .env."""
