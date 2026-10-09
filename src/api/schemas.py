@@ -1,7 +1,10 @@
+"""
+FastAPI Request and Response Schemas
+"""
+
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 from src.rules_nlp.arabic_alert_engine import DiagnosticAlertResponse
-
 
 
 class TelemetryInputSchema(BaseModel):
@@ -42,3 +45,22 @@ class MechanicChatRequest(BaseModel):
 class MechanicChatResponse(BaseModel):
     response_ar: str
     status: str = "success"
+    latency_ms: Optional[int] = 0
+    model: Optional[str] = "deepseek-chat"
+    source: Optional[str] = "LIVE_LLM_API"
+
+
+class APIConfigSchema(BaseModel):
+    api_key: str = Field(..., description="LLM Provider API Key")
+    base_url: Optional[str] = Field("https://api.deepseek.com/v1", description="Provider API Base URL")
+    model_name: Optional[str] = Field("deepseek-chat", description="Model identifier")
+
+
+class TestKeyResponseSchema(BaseModel):
+    success: bool
+    status_code: int
+    latency_ms: int
+    provider: str
+    model: str
+    message: Optional[str] = None
+    error_message: Optional[str] = None

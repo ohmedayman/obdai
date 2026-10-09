@@ -1,224 +1,352 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام التشخيص الكهربائي الذكي OBD-II | Smart AI Mechanic</title>
+    <title>Smart OBD-II Electrical AI | منصة التشخيص التنبؤي الذكية</title>
+    
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome CDN -->
+    <!-- FontAwesome 6 Pro CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js for Live Telemetry Waveforms -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Google Fonts: Cairo -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
                         cairo: ['Cairo', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
                     },
                     colors: {
-                        brand: {
-                            50: '#eef2ff',
-                            500: '#4f46e5',
-                            600: '#4338ca',
-                            700: '#3730a3',
-                            800: '#1e1b4b',
-                            900: '#0f172a',
+                        cyber: {
+                            50: '#f0fdfa',
+                            500: '#06b6d4',
+                            600: '#0891b2',
+                            900: '#0b0f19',
+                            800: '#111827',
+                            700: '#1e293b',
+                        }
+                    },
+                    animation: {
+                        'glow-pulse': 'glowPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'scan-line': 'scanLine 3s linear infinite',
+                    },
+                    keyframes: {
+                        glowPulse: {
+                            '0%, 100%': { opacity: '1', filter: 'drop-shadow(0 0 15px rgba(99, 102, 241, 0.6))' },
+                            '50%': { opacity: '0.7', filter: 'drop-shadow(0 0 5px rgba(99, 102, 241, 0.2))' },
+                        },
+                        scanLine: {
+                            '0%': { transform: 'translateY(-100%)' },
+                            '100%': { transform: 'translateY(1000%)' },
                         }
                     }
                 }
             }
         }
     </script>
+
     <style>
         body {
             font-family: 'Cairo', sans-serif;
+            background-color: #0b0f19;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.08) 0px, transparent 50%);
+        }
+        .glass-card {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
         }
         .chat-bubble-user {
-            background: linear-gradient(135deg, #4f46e5, #4338ca);
-            color: white;
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            color: #ffffff;
             border-bottom-left-radius: 4px;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.25);
         }
         .chat-bubble-assistant {
-            background: #ffffff;
-            color: #1e293b;
-            border: 1px solid #e2e8f0;
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(8px);
+            color: #f1f5f9;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-bottom-right-radius: 4px;
         }
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.6);
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+<body class="text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
 
-    <!-- Top Navigation Bar -->
-    <header class="bg-slate-800/80 border-b border-slate-700/60 sticky top-0 z-50 backdrop-blur-md">
+    <!-- Top Navigation Header -->
+    <header class="glass-card border-b border-slate-800/80 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8 flex items-center justify-between">
-            <div class="flex items-center space-x-3 space-x-reverse">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                    <i class="fa-solid fa-car-battery text-white text-lg"></i>
+            
+            <!-- Brand Logo & Title -->
+            <div class="flex items-center space-x-3.5 space-x-reverse">
+                <div class="relative">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-cyan-500 to-amber-400 p-0.5 shadow-lg shadow-indigo-500/20">
+                        <div class="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center">
+                            <i class="fa-solid fa-car-battery text-indigo-400 text-xl animate-pulse"></i>
+                        </div>
+                    </div>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold text-white tracking-wide">Smart OBD-II Electrical AI</h1>
-                    <p class="text-xs text-indigo-300">منصة التشخيص الكهربائي التنبؤي ومساعد السائق الذكي</p>
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <h1 class="text-lg font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+                            Smart OBD-II AI
+                        </h1>
+                        <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                            v1.1 PRO
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-400">المنصة الذكية لتشخيص كهرباء السيارات ومساعد السائق التوليدي</p>
                 </div>
             </div>
 
-            <!-- Status Indicator -->
-            <div class="flex items-center space-x-4 space-x-reverse">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 ml-2 animate-pulse"></span>
-                    خادم الذكاء الاصطناعي متصل
-                </span>
-                <a href="/docs" target="_blank" class="hidden sm:inline-flex items-center text-xs text-slate-400 hover:text-white transition">
-                    <i class="fa-solid fa-book ml-1.5"></i> التوثيق API
+            <!-- Right Controls & API Status -->
+            <div class="flex items-center space-x-3 space-x-reverse">
+                
+                <!-- Live LLM Status Badge (Clickable) -->
+                <button onclick="openSettingsModal()" id="btn_status_badge" class="flex items-center space-x-2 space-x-reverse px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-xs transition duration-200 shadow-sm group">
+                    <span id="status_ping_indicator" class="relative flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                    </span>
+                    <span id="status_text_label" class="font-semibold text-slate-300 group-hover:text-white">فحص مزود الذكاء...</span>
+                    <i class="fa-solid fa-chevron-left text-[10px] text-slate-500 group-hover:text-indigo-400 mr-1"></i>
+                </button>
+
+                <!-- Settings Button -->
+                <button onclick="openSettingsModal()" title="إعدادات مزود الذكاء الاصطناعي (API Settings)" class="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-indigo-600/20 border border-slate-700/60 hover:border-indigo-500/40 text-slate-300 hover:text-indigo-300 flex items-center justify-center transition">
+                    <i class="fa-solid fa-gear text-sm"></i>
+                </button>
+
+                <!-- API Docs Link -->
+                <a href="/docs" target="_blank" title="توثيق الـ API (Swagger)" class="hidden sm:flex items-center px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-xs font-semibold text-slate-300 hover:text-white transition">
+                    <i class="fa-solid fa-code ml-1.5 text-indigo-400"></i>
+                    <span>Swagger API</span>
                 </a>
             </div>
+
         </div>
     </header>
 
-    <!-- Main Layout Container -->
+    <!-- Main Content Container -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        <!-- LEFT COLUMN: Live Telemetry & Control Panel (lg:col-span-7) -->
+        <!-- LEFT COLUMN: Live Telemetry Gauges, Presets, Waveform & Diagnosis (lg:col-span-7) -->
         <div class="lg:col-span-7 space-y-6">
 
-            <!-- Presets / Quick Test Cases -->
-            <div class="bg-slate-800/90 rounded-2xl p-5 border border-slate-700/70 shadow-xl">
-                <h2 class="text-sm font-bold text-slate-300 mb-3 flex items-center">
-                    <i class="fa-solid fa-sliders text-indigo-400 ml-2"></i>
-                    تجارب المحاكاة السريعة (Quick Scenario Presets)
-                </h2>
+            <!-- 1. Quick Scenarios & Preset Bar -->
+            <div class="glass-card rounded-2xl p-4 sm:p-5 shadow-2xl relative overflow-hidden">
+                <div class="flex items-center justify-between mb-3.5">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center">
+                        <i class="fa-solid fa-bolt-lightning text-indigo-400 ml-2"></i>
+                        سيناريوهات محاكاة الأعطال (Quick Presets)
+                    </h2>
+                    <span class="text-[11px] text-slate-500">اختر حالة لتطبيق القياسات فوراً</span>
+                </div>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    <button onclick="loadScenario('healthy')" class="px-3 py-2.5 rounded-xl bg-slate-700/50 hover:bg-emerald-600/20 hover:border-emerald-500/40 border border-slate-600/40 text-xs font-bold text-emerald-400 transition flex flex-col items-center justify-center space-y-1">
-                        <i class="fa-solid fa-circle-check text-base"></i>
-                        <span>سيارة سليمة</span>
+                    <button onclick="loadScenario('healthy')" class="group p-3 rounded-xl bg-slate-900/60 hover:bg-emerald-500/10 border border-slate-800 hover:border-emerald-500/40 transition duration-200 text-right flex flex-col justify-between h-20">
+                        <div class="flex items-center justify-between w-full">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            <i class="fa-solid fa-circle-check text-slate-600 group-hover:text-emerald-400 text-sm transition"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-200 group-hover:text-emerald-300">سليم 100%</div>
+                            <div class="text-[10px] text-slate-500">جهد وشحن مثالي</div>
+                        </div>
                     </button>
-                    <button onclick="loadScenario('battery')" class="px-3 py-2.5 rounded-xl bg-slate-700/50 hover:bg-amber-600/20 hover:border-amber-500/40 border border-slate-600/40 text-xs font-bold text-amber-400 transition flex flex-col items-center justify-center space-y-1">
-                        <i class="fa-solid fa-battery-quarter text-base"></i>
-                        <span>بطارية ضعيفة</span>
+
+                    <button onclick="loadScenario('battery')" class="group p-3 rounded-xl bg-slate-900/60 hover:bg-amber-500/10 border border-slate-800 hover:border-amber-500/40 transition duration-200 text-right flex flex-col justify-between h-20">
+                        <div class="flex items-center justify-between w-full">
+                            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                            <i class="fa-solid fa-battery-quarter text-slate-600 group-hover:text-amber-400 text-sm transition"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-200 group-hover:text-amber-300">تدهور بطارية</div>
+                            <div class="text-[10px] text-slate-500">هبوط تشغيل حرج</div>
+                        </div>
                     </button>
-                    <button onclick="loadScenario('alternator_under')" class="px-3 py-2.5 rounded-xl bg-slate-700/50 hover:bg-rose-600/20 hover:border-rose-500/40 border border-slate-600/40 text-xs font-bold text-rose-400 transition flex flex-col items-center justify-center space-y-1">
-                        <i class="fa-solid fa-triangle-exclamation text-base"></i>
-                        <span>خلل دينامو (ضعيف)</span>
+
+                    <button onclick="loadScenario('alternator_under')" class="group p-3 rounded-xl bg-slate-900/60 hover:bg-rose-500/10 border border-slate-800 hover:border-rose-500/40 transition duration-200 text-right flex flex-col justify-between h-20">
+                        <div class="flex items-center justify-between w-full">
+                            <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                            <i class="fa-solid fa-triangle-exclamation text-slate-600 group-hover:text-rose-400 text-sm transition"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-200 group-hover:text-rose-300">عطل دينامو</div>
+                            <div class="text-[10px] text-slate-500">انقطاع الشحن &lt;13V</div>
+                        </div>
                     </button>
-                    <button onclick="loadScenario('drain')" class="px-3 py-2.5 rounded-xl bg-slate-700/50 hover:bg-purple-600/20 hover:border-purple-500/40 border border-slate-600/40 text-xs font-bold text-purple-400 transition flex flex-col items-center justify-center space-y-1">
-                        <i class="fa-solid fa-bolt text-base"></i>
-                        <span>تسريب / مقاومة</span>
+
+                    <button onclick="loadScenario('drain')" class="group p-3 rounded-xl bg-slate-900/60 hover:bg-purple-500/10 border border-slate-800 hover:border-purple-500/40 transition duration-200 text-right flex flex-col justify-between h-20">
+                        <div class="flex items-center justify-between w-full">
+                            <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                            <i class="fa-solid fa-microchip text-slate-600 group-hover:text-purple-400 text-sm transition"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-200 group-hover:text-purple-300">تسريب / أرضي</div>
+                            <div class="text-[10px] text-slate-500">هبوط حاد تحت الحمل</div>
+                        </div>
                     </button>
                 </div>
             </div>
 
-            <!-- Telemetry Parameters Form -->
-            <div class="bg-slate-800/90 rounded-2xl p-5 border border-slate-700/70 shadow-xl space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-700 pb-3">
-                    <h2 class="text-sm font-bold text-slate-200 flex items-center">
-                        <i class="fa-solid fa-gauge-high text-indigo-400 ml-2"></i>
-                        قراءات الحساسات الكهربائية (OBD-II Telemetry)
-                    </h2>
-                    <span class="text-xs text-slate-400">تحكم لحظي بالقراءات</span>
+            <!-- 2. Live Digital Gauges & Controls Grid -->
+            <div class="glass-card rounded-2xl p-5 shadow-2xl space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3.5">
+                    <div>
+                        <h3 class="text-sm font-bold text-white flex items-center">
+                            <i class="fa-solid fa-gauge-high text-cyan-400 ml-2"></i>
+                            القياسات اللحظية ومؤشرات الحساسات (Live Telemetry)
+                        </h3>
+                    </div>
+                    <div class="flex items-center space-x-2 space-x-reverse text-xs text-slate-400">
+                        <span>معدل التحديث:</span>
+                        <span class="font-mono text-cyan-400 font-bold">5.0 Hz</span>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <!-- Digital Telemetry Display Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3.5 text-xs">
+                    
                     <!-- Resting Voltage -->
-                    <div>
-                        <label class="block text-slate-300 font-semibold mb-1">جهد السكون (Resting V):</label>
-                        <div class="flex items-center space-x-2 space-x-reverse">
-                            <input type="number" step="0.1" id="input_resting_v" value="12.6" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 outline-none">
-                            <span class="text-slate-400 font-bold">V</span>
+                    <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-800 focus-within:border-indigo-500 transition">
+                        <span class="text-slate-400 text-[11px] block mb-1">جهد السكون (Resting):</span>
+                        <div class="flex items-center justify-between">
+                            <input type="number" step="0.05" id="input_resting_v" value="12.60" class="w-20 bg-transparent font-mono font-bold text-base text-cyan-400 outline-none">
+                            <span class="text-slate-500 font-bold">V</span>
                         </div>
                     </div>
 
                     <!-- Min Cranking Voltage -->
-                    <div>
-                        <label class="block text-slate-300 font-semibold mb-1">أدنى جهد أثناء التدوير (Cranking Min):</label>
-                        <div class="flex items-center space-x-2 space-x-reverse">
-                            <input type="number" step="0.1" id="input_cranking_v" value="10.6" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 outline-none">
-                            <span class="text-slate-400 font-bold">V</span>
+                    <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-800 focus-within:border-indigo-500 transition">
+                        <span class="text-slate-400 text-[11px] block mb-1">أدنى جهد تدوير (Crank Min):</span>
+                        <div class="flex items-center justify-between">
+                            <input type="number" step="0.1" id="input_cranking_v" value="10.70" class="w-20 bg-transparent font-mono font-bold text-base text-cyan-400 outline-none">
+                            <span class="text-slate-500 font-bold">V</span>
                         </div>
                     </div>
 
                     <!-- Running Voltage Mean -->
-                    <div>
-                        <label class="block text-slate-300 font-semibold mb-1">متوسط شحن الدينامو (Running V):</label>
-                        <div class="flex items-center space-x-2 space-x-reverse">
-                            <input type="number" step="0.1" id="input_running_v" value="14.2" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 outline-none">
-                            <span class="text-slate-400 font-bold">V</span>
+                    <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-800 focus-within:border-indigo-500 transition">
+                        <span class="text-slate-400 text-[11px] block mb-1">شحن الدينامو (Running V):</span>
+                        <div class="flex items-center justify-between">
+                            <input type="number" step="0.1" id="input_running_v" value="14.20" class="w-20 bg-transparent font-mono font-bold text-base text-cyan-400 outline-none">
+                            <span class="text-slate-500 font-bold">V</span>
                         </div>
                     </div>
 
                     <!-- Load Voltage Drop -->
-                    <div>
-                        <label class="block text-slate-300 font-semibold mb-1">هبوط الجهد تحت الحمل (Load Drop):</label>
-                        <div class="flex items-center space-x-2 space-x-reverse">
-                            <input type="number" step="0.05" id="input_load_drop" value="0.1" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 outline-none">
-                            <span class="text-slate-400 font-bold">V</span>
+                    <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-800 focus-within:border-indigo-500 transition">
+                        <span class="text-slate-400 text-[11px] block mb-1">هبوط الحمل (Load Drop):</span>
+                        <div class="flex items-center justify-between">
+                            <input type="number" step="0.05" id="input_load_drop" value="0.10" class="w-20 bg-transparent font-mono font-bold text-base text-indigo-400 outline-none">
+                            <span class="text-slate-500 font-bold">V</span>
                         </div>
                     </div>
 
-                    <!-- Voltage Ripple -->
-                    <div>
-                        <label class="block text-slate-300 font-semibold mb-1">تذبذب الجهد (AC Ripple):</label>
-                        <div class="flex items-center space-x-2 space-x-reverse">
-                            <input type="number" step="0.01" id="input_ripple" value="0.02" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 outline-none">
-                            <span class="text-slate-400 font-bold">V</span>
+                    <!-- AC Ripple -->
+                    <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-800 focus-within:border-indigo-500 transition">
+                        <span class="text-slate-400 text-[11px] block mb-1">تذبذب الجهد (AC Ripple):</span>
+                        <div class="flex items-center justify-between">
+                            <input type="number" step="0.01" id="input_ripple" value="0.02" class="w-20 bg-transparent font-mono font-bold text-base text-indigo-400 outline-none">
+                            <span class="text-slate-500 font-bold">V</span>
                         </div>
                     </div>
 
                     <!-- Engine RPM -->
-                    <div>
-                        <label class="block text-slate-300 font-semibold mb-1">سرعة دوران المحرك (RPM):</label>
-                        <div class="flex items-center space-x-2 space-x-reverse">
-                            <input type="number" step="50" id="input_rpm" value="850" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:border-indigo-500 outline-none">
-                            <span class="text-slate-400 font-bold">RPM</span>
+                    <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-800 focus-within:border-indigo-500 transition">
+                        <span class="text-slate-400 text-[11px] block mb-1">دوران المحرك (RPM):</span>
+                        <div class="flex items-center justify-between">
+                            <input type="number" step="50" id="input_rpm" value="850" class="w-20 bg-transparent font-mono font-bold text-base text-indigo-400 outline-none">
+                            <span class="text-slate-500 font-bold">RPM</span>
                         </div>
+                    </div>
+
+                </div>
+
+                <!-- Live Waveform Chart Canvas -->
+                <div class="bg-slate-950/60 rounded-xl p-3.5 border border-slate-800/80">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-400">
+                            <i class="fa-solid fa-chart-line text-indigo-400 ml-1"></i>
+                            المخطط البياني اللحظي للجهد (Voltage Curve Simulation)
+                        </span>
+                        <span class="text-[10px] font-mono text-emerald-400">Live Waveform</span>
+                    </div>
+                    <div class="h-32 w-full">
+                        <canvas id="telemetryChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Run AI Diagnostic Button -->
-                <button onclick="runAIDiagnostic()" id="btn_run_diag" class="w-full py-3.5 mt-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition flex items-center justify-center space-x-2 space-x-reverse">
-                    <i class="fa-solid fa-microchip text-base"></i>
-                    <span>تشغيل الفحص والتشخيص الذكي (Run AI Diagnostic)</span>
+                <!-- Run AI Diagnostic Action Button -->
+                <button onclick="runAIDiagnostic()" id="btn_run_diag" class="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-extrabold text-sm shadow-xl shadow-indigo-600/30 transition transform active:scale-[0.99] flex items-center justify-center space-x-2 space-x-reverse">
+                    <i class="fa-solid fa-wand-magic-sparkles text-base"></i>
+                    <span>تشغيل الفحص والتشخيص الذكي (Run AI Diagnostic Scan)</span>
                 </button>
             </div>
 
-            <!-- AI Diagnostic Card Output -->
-            <div id="diagnostic_result_box" class="bg-slate-800/90 rounded-2xl p-5 border border-slate-700/70 shadow-xl space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-700 pb-3">
-                    <h3 class="text-sm font-bold text-slate-200 flex items-center">
-                        <i class="fa-solid fa-square-poll-vertical text-amber-400 ml-2"></i>
-                        تقرير التنبيه والتقييم الكهربائي
+            <!-- 3. AI Diagnostic Card Output -->
+            <div id="diagnostic_result_box" class="glass-card rounded-2xl p-5 shadow-2xl space-y-4 border border-indigo-500/20">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h3 class="text-sm font-bold text-white flex items-center">
+                        <i class="fa-solid fa-file-waveform text-amber-400 ml-2"></i>
+                        تقرير التقييم والتشخيص الكهربائي
                     </h3>
-                    <span id="badge_risk" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                        سليم (LOW RISK)
-                    </span>
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <span id="badge_risk" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                            سليم (LOW RISK)
+                        </span>
+                    </div>
                 </div>
 
-                <div class="space-y-3">
+                <div class="space-y-3.5">
                     <div>
                         <h4 id="diag_title" class="text-base font-bold text-white">المنظومة الكهربائية تعمل بكفاءة ممتازة ✅</h4>
-                        <p id="diag_summary" class="text-xs text-slate-300 mt-1 leading-relaxed">
+                        <p id="diag_summary" class="text-xs text-slate-300 mt-1.5 leading-relaxed">
                             جهد البطارية والشحن الكهربائي من الدينامو ضمن الحدود الهندسية القياسية، ولا توجد أي مؤشرات لتسريب تيار أو هبوط في الجهد.
                         </p>
                     </div>
 
-                    <!-- Driveability badge -->
-                    <div id="driveability_badge" class="flex items-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-semibold">
-                        <i class="fa-solid fa-shield-halved text-base ml-2"></i>
+                    <!-- Driveability Box -->
+                    <div id="driveability_badge" class="flex items-center p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-semibold">
+                        <i class="fa-solid fa-shield-halved text-base ml-2.5"></i>
                         <span>القيادة آمنة تماماً ولا توجد مخاطر على حواسيب السيارة أو البطارية.</span>
                     </div>
 
                     <!-- Recommended Action -->
-                    <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-700/50 space-y-1.5">
+                    <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
                         <div class="text-xs font-bold text-indigo-300 flex items-center">
-                            <i class="fa-solid fa-wrench ml-1.5"></i> الإجراء الموصى به لسائق السيارة:
+                            <i class="fa-solid fa-screwdriver-wrench ml-1.5"></i> الإجراء الموصى به لسائق السيارة:
                         </div>
-                        <p id="diag_action" class="text-xs text-slate-300 leading-relaxed">
+                        <p id="diag_action" class="text-xs text-slate-300 leading-relaxed font-normal">
                             لا يتطلب أي إجراء صيانة حالياً. استمر في القيادة بشكل طبيعي مع الفحص الدوري المعتاد.
                         </p>
                     </div>
@@ -228,69 +356,74 @@
         </div>
 
         <!-- RIGHT COLUMN: AI Mechanic Chat Interface (lg:col-span-5) -->
-        <div class="lg:col-span-5 flex flex-col h-[700px] bg-slate-800/90 rounded-2xl border border-slate-700/70 shadow-2xl overflow-hidden">
+        <div class="lg:col-span-5 flex flex-col h-[780px] glass-card rounded-2xl shadow-2xl overflow-hidden border border-slate-800">
             
             <!-- Chat Header -->
-            <div class="p-4 bg-gradient-to-r from-slate-800 to-indigo-950 border-b border-slate-700 flex items-center justify-between">
+            <div class="p-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
                 <div class="flex items-center space-x-3 space-x-reverse">
                     <div class="relative">
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md">
+                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-500 flex items-center justify-center text-white shadow-md">
                             <i class="fa-solid fa-user-astronaut text-lg"></i>
                         </div>
-                        <span class="absolute bottom-0 left-0 w-3 h-3 bg-emerald-400 border-2 border-slate-800 rounded-full"></span>
+                        <span id="chat_online_dot" class="absolute -bottom-0.5 -left-0.5 w-3 h-3 bg-emerald-400 border-2 border-slate-900 rounded-full"></span>
                     </div>
                     <div>
-                        <h3 class="text-sm font-bold text-white">ميكانيكي الذكاء الاصطناعي</h3>
-                        <p class="text-[11px] text-indigo-300">مساعد تشخيص الأعطال باللغة العربية (LLM)</p>
+                        <div class="flex items-center space-x-1.5 space-x-reverse">
+                            <h3 class="text-sm font-bold text-white">ميكانيكي الذكاء الاصطناعي</h3>
+                            <span id="chat_model_tag" class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                                deepseek-chat
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-slate-400">مساعد تشخيص الأعطال باللغة العربية (LLM)</p>
                     </div>
                 </div>
-                <button onclick="clearChat()" title="مسح المحادثة" class="text-slate-400 hover:text-white text-xs px-2 py-1 rounded-lg hover:bg-slate-700/50 transition">
+                <button onclick="clearChat()" title="مسح المحادثة" class="text-slate-400 hover:text-white text-xs px-2.5 py-1.5 rounded-lg hover:bg-slate-800 transition">
                     <i class="fa-solid fa-trash-can"></i>
                 </button>
             </div>
 
             <!-- Quick Suggestion Chips -->
-            <div class="px-4 py-2.5 bg-slate-900/60 border-b border-slate-700/50 flex space-x-2 space-x-reverse overflow-x-auto text-[11px]">
-                <button onclick="sendQuickPrompt('هل أستطيع متابعة السفر بالسيارة بالوضع الحالي؟')" class="whitespace-nowrap px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600/30 text-indigo-300 border border-slate-700 hover:border-indigo-500/50 transition">
-                    🚗 هل أستطيع متابعة السفر؟
+            <div class="px-4 py-2.5 bg-slate-950/40 border-b border-slate-800/80 flex space-x-2 space-x-reverse overflow-x-auto text-[11px] custom-scrollbar">
+                <button onclick="sendQuickPrompt('هل أستطيع متابعة السفر بالسيارة بالوضع الحالي؟')" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-indigo-600/20 text-indigo-300 border border-slate-800 hover:border-indigo-500/40 transition">
+                    🚗 هل أستطيع السفر؟
                 </button>
-                <button onclick="sendQuickPrompt('كيف أتأكد هل المشكلة من البطارية أم الدينامو؟')" class="whitespace-nowrap px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600/30 text-indigo-300 border border-slate-700 hover:border-indigo-500/50 transition">
-                    🔋 فحص البطارية أم الدينامو؟
+                <button onclick="sendQuickPrompt('كيف أتأكد هل المشكلة من البطارية أم الدينامو؟')" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-indigo-600/20 text-indigo-300 border border-slate-800 hover:border-indigo-500/40 transition">
+                    🔋 فحص بطارية أم دينامو؟
                 </button>
-                <button onclick="sendQuickPrompt('ما هي خطوات فحص أصابع وكابلات البطارية بنفسي؟')" class="whitespace-nowrap px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-indigo-600/30 text-indigo-300 border border-slate-700 hover:border-indigo-500/50 transition">
-                    🛠️ خطوات الفحص الذاتي DIY
+                <button onclick="sendQuickPrompt('ما هي خطوات فحص أصابع وكابلات البطارية بنفسي؟')" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-indigo-600/20 text-indigo-300 border border-slate-800 hover:border-indigo-500/40 transition">
+                    🛠️ فحص ذاتي DIY
                 </button>
             </div>
 
             <!-- Messages Stream Area -->
-            <div id="chat_messages" class="flex-1 p-4 space-y-3.5 overflow-y-auto bg-slate-900/40 text-xs">
+            <div id="chat_messages" class="flex-1 p-4 space-y-4 overflow-y-auto bg-slate-950/20 text-xs custom-scrollbar">
                 <!-- Welcome Message from Assistant -->
-                <div class="flex items-start space-x-2.5 space-x-reverse">
-                    <div class="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5">
+                <div class="flex items-start space-x-3 space-x-reverse">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5 shadow-md">
                         <i class="fa-solid fa-robot"></i>
                     </div>
-                    <div class="chat-bubble-assistant p-3.5 rounded-2xl shadow-sm max-w-[85%] leading-relaxed text-slate-800 text-xs">
-                        مرحباً بك! أنا <strong>خبير تشخيص كهرباء السيارات الذكي</strong> 🚗⚡
+                    <div class="chat-bubble-assistant p-4 rounded-2xl shadow-sm max-w-[88%] leading-relaxed text-slate-200 text-xs">
+                        مرحباً بك! أنا <strong>خبير واستشاري تشخيص كهرباء السيارات الذكي</strong> 🚗⚡
                         <br><br>
-                        أنا متصل مباشرة بالقراءات الحالية لسيارتك. يمكنك سؤالي عن أي عطل، أو استشارتي عن إمكانية متابعة القيادة وكيفية إصلاح المشاكل بنفسك.
+                        أنا متصل مباشرة بالقراءات الكهربائية اللحظية لسيارتك. يمكنك سؤالي عن أي عطل، أو استشارتي عن إمكانية متابعة السير وكيفية إصلاح المشاكل بنفسك.
                     </div>
                 </div>
             </div>
 
             <!-- Chat Input Area -->
-            <div class="p-3.5 bg-slate-800 border-t border-slate-700">
+            <div class="p-3.5 bg-slate-900/90 border-t border-slate-800">
                 <form onsubmit="handleChatSubmit(event)" class="flex items-center space-x-2 space-x-reverse">
                     <input 
                         type="text" 
                         id="chat_input" 
-                        placeholder="اسأل الميكانيكي الذكي عن حالة سيارتك..." 
-                        class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                        placeholder="اسأل الميكانيكي الذكي عن حالة سيارتك الكهربائية..." 
+                        class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition"
                         autocomplete="off"
                     >
                     <button 
                         type="submit" 
                         id="btn_send_chat" 
-                        class="w-10 h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center transition shadow-md shadow-indigo-600/30 disabled:opacity-50"
+                        class="w-11 h-11 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white flex items-center justify-center transition shadow-lg shadow-indigo-600/30 disabled:opacity-50"
                     >
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                     </button>
@@ -301,60 +434,230 @@
 
     </main>
 
+    <!-- SETTINGS MODAL: AI Provider & Live Connection Tester -->
+    <div id="settings_modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md hidden p-4">
+        <div class="glass-card rounded-2xl max-w-lg w-full p-6 border border-slate-700 shadow-2xl space-y-5 animate-in fade-in duration-200">
+            
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3.5">
+                <div class="flex items-center space-x-2.5 space-x-reverse">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
+                        <i class="fa-solid fa-gears"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white">إعدادات مزود الذكاء الاصطناعي (LLM Config)</h3>
+                        <p class="text-[11px] text-slate-400">ضبط واختبار مفتاح الـ API للاتصال المباشر</p>
+                    </div>
+                </div>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+
+            <!-- Provider Presets -->
+            <div class="space-y-1.5 text-xs">
+                <label class="block font-semibold text-slate-300">اختر مزود الذكاء الاصطناعي:</label>
+                <select id="modal_provider_select" onchange="handleProviderChange()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-white outline-none focus:border-indigo-500">
+                    <option value="deepseek">DeepSeek (deepseek-chat) - الافتراضي</option>
+                    <option value="openai">OpenAI (gpt-4o-mini / gpt-4o)</option>
+                    <option value="groq">Groq (llama-3.3-70b-versatile / llama-3.1-8b)</option>
+                    <option value="openrouter">OpenRouter (Unified Multi-Model)</option>
+                    <option value="custom">مخصص (Custom Base URL / Local Ollama)</option>
+                </select>
+            </div>
+
+            <!-- API Key Input -->
+            <div class="space-y-1.5 text-xs">
+                <label class="block font-semibold text-slate-300">مفتاح الـ API Key:</label>
+                <div class="relative">
+                    <input 
+                        type="password" 
+                        id="modal_api_key" 
+                        placeholder="sk-..." 
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 pl-10 text-white font-mono text-xs outline-none focus:border-indigo-500"
+                    >
+                    <button type="button" onclick="toggleKeyVisibility()" class="absolute left-3 top-2.5 text-slate-400 hover:text-white">
+                        <i id="eye_icon" class="fa-solid fa-eye text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Base URL & Model Name -->
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Base URL:</label>
+                    <input type="text" id="modal_base_url" value="https://api.deepseek.com/v1" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-300 font-mono text-xs outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Model Name:</label>
+                    <input type="text" id="modal_model_name" value="deepseek-chat" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-300 font-mono text-xs outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <!-- Test Connection Result Box -->
+            <div id="modal_test_result" class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs hidden"></div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center space-x-3 space-x-reverse pt-2">
+                <button onclick="testAPIConnectionFromModal()" id="btn_modal_test" class="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-cyan-400 font-bold text-xs flex items-center justify-center transition">
+                    <i class="fa-solid fa-plug-circle-bolt ml-1.5"></i>
+                    <span>اختبار الاتصال اللحظي</span>
+                </button>
+                <button onclick="saveAPISettings()" id="btn_modal_save" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center justify-center transition shadow-md shadow-indigo-600/30">
+                    <i class="fa-solid fa-floppy-disk ml-1.5"></i>
+                    <span>حفظ وتطبيق</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
     <!-- Footer -->
-    <footer class="bg-slate-950 border-t border-slate-800 py-3 text-center text-xs text-slate-400">
-        مشروع تخرج: <strong>Smart OBD-II Electrical Diagnostic System</strong> &copy; 2026
+    <footer class="bg-slate-950/80 border-t border-slate-900 py-3 text-center text-xs text-slate-500">
+        مشروع تخرج: <strong>Smart OBD-II Electrical Diagnostic System</strong> &copy; 2026 | تطوير الذكاء الاصطناعي وإنترنت الأشياء
     </footer>
 
     <!-- Client-Side JavaScript Logic -->
     <script>
         let chatHistory = [];
+        let telemetryChart = null;
         let currentVehicleContext = {
-            current_voltage: 12.6,
-            min_cranking_voltage: 10.6,
-            running_voltage: 14.2,
-            engine_state: "IDLE"
+            resting_voltage_v: 12.6,
+            min_cranking_voltage_v: 10.7,
+            cranking_voltage_sag_v: 1.9,
+            running_voltage_mean_v: 14.2,
+            running_voltage_std_v: 0.03,
+            voltage_under_load_mean_v: 14.1,
+            load_voltage_drop_v: 0.1,
+            voltage_ripple_mean_v: 0.02,
+            avg_engine_rpm: 850,
+            include_llm_advisory: false
         };
 
-        // Preset Scenarios
+        // Initialize on Page Load
+        window.addEventListener('DOMContentLoaded', () => {
+            initTelemetryChart();
+            checkLiveAPIStatus();
+        });
+
+        // Chart.js Setup
+        function initTelemetryChart() {
+            const ctx = document.getElementById('telemetryChart').getContext('2d');
+            const labels = Array.from({length: 20}, (_, i) => `${(i * 0.5).toFixed(1)}s`);
+            const initialData = Array(20).fill(14.2);
+
+            telemetryChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'جهد البطارية اللحظي (V)',
+                        data: initialData,
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: 2,
+                        pointBackgroundColor: '#6366f1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: {
+                            min: 6,
+                            max: 17,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTelemetryChart(restingV, crankV, runningV, loadV) {
+            if (!telemetryChart) return;
+            const simulatedCurve = [
+                restingV, restingV, restingV,
+                crankV, crankV,
+                runningV * 0.95, runningV, runningV, runningV,
+                loadV, loadV, loadV, runningV, runningV, runningV, runningV, runningV, runningV, runningV, runningV
+            ];
+            telemetryChart.data.datasets[0].data = simulatedCurve;
+            telemetryChart.update();
+        }
+
+        // Live API Status Checker
+        async function checkLiveAPIStatus() {
+            const ind = document.getElementById('status_ping_indicator');
+            const label = document.getElementById('status_text_label');
+
+            try {
+                const res = await fetch('/api/settings/test-key', { method: 'POST' });
+                const data = await res.json();
+
+                if (data.success) {
+                    ind.innerHTML = `
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    `;
+                    label.innerText = `${data.model} متصل (${data.latency_ms}ms)`;
+                    label.className = "font-semibold text-emerald-400 group-hover:text-emerald-300";
+                    document.getElementById('chat_online_dot').className = "absolute -bottom-0.5 -left-0.5 w-3 h-3 bg-emerald-400 border-2 border-slate-900 rounded-full";
+                    document.getElementById('chat_model_tag').innerText = data.model;
+                } else {
+                    ind.innerHTML = `<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>`;
+                    label.innerText = `الـ API غير متصل (اضغط للضبط)`;
+                    label.className = "font-semibold text-rose-400 group-hover:text-rose-300";
+                    document.getElementById('chat_online_dot').className = "absolute -bottom-0.5 -left-0.5 w-3 h-3 bg-rose-500 border-2 border-slate-900 rounded-full";
+                }
+            } catch (e) {
+                label.innerText = "فشل فحص الخادم";
+            }
+        }
+
+        // Scenarios
         function loadScenario(type) {
             if (type === 'healthy') {
-                document.getElementById('input_resting_v').value = 12.6;
-                document.getElementById('input_cranking_v').value = 10.7;
-                document.getElementById('input_running_v').value = 14.2;
-                document.getElementById('input_load_drop').value = 0.1;
+                document.getElementById('input_resting_v').value = 12.65;
+                document.getElementById('input_cranking_v').value = 10.80;
+                document.getElementById('input_running_v').value = 14.20;
+                document.getElementById('input_load_drop').value = 0.10;
                 document.getElementById('input_ripple').value = 0.02;
                 document.getElementById('input_rpm').value = 850;
             } else if (type === 'battery') {
-                document.getElementById('input_resting_v').value = 11.8;
-                document.getElementById('input_cranking_v').value = 8.1;
-                document.getElementById('input_running_v').value = 14.1;
+                document.getElementById('input_resting_v').value = 11.75;
+                document.getElementById('input_cranking_v').value = 7.90;
+                document.getElementById('input_running_v').value = 14.10;
                 document.getElementById('input_load_drop').value = 0.15;
                 document.getElementById('input_ripple').value = 0.02;
                 document.getElementById('input_rpm').value = 800;
             } else if (type === 'alternator_under') {
-                document.getElementById('input_resting_v').value = 12.3;
-                document.getElementById('input_cranking_v').value = 10.2;
-                document.getElementById('input_running_v').value = 12.2;
-                document.getElementById('input_load_drop').value = 0.6;
+                document.getElementById('input_resting_v').value = 12.30;
+                document.getElementById('input_cranking_v').value = 10.20;
+                document.getElementById('input_running_v').value = 12.20;
+                document.getElementById('input_load_drop').value = 0.65;
                 document.getElementById('input_ripple').value = 0.03;
                 document.getElementById('input_rpm').value = 900;
             } else if (type === 'drain') {
-                document.getElementById('input_resting_v').value = 12.2;
-                document.getElementById('input_cranking_v').value = 10.1;
-                document.getElementById('input_running_v').value = 14.0;
-                document.getElementById('input_load_drop').value = 1.3;
+                document.getElementById('input_resting_v').value = 12.20;
+                document.getElementById('input_cranking_v').value = 10.10;
+                document.getElementById('input_running_v').value = 14.00;
+                document.getElementById('input_load_drop').value = 1.35;
                 document.getElementById('input_ripple').value = 0.02;
                 document.getElementById('input_rpm').value = 850;
             }
             runAIDiagnostic();
         }
 
-        // Run AI Diagnostic API Call
+        // Run AI Diagnostic
         async function runAIDiagnostic() {
             const btn = document.getElementById('btn_run_diag');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-2"></i> جاري تحليل الإشارات الكهربائية...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-2"></i> جاري فحص وتحليل الإشارات الكهربائية...';
 
             const resting_v = parseFloat(document.getElementById('input_resting_v').value);
             const crank_v = parseFloat(document.getElementById('input_cranking_v').value);
@@ -376,6 +679,8 @@
                 include_llm_advisory: false
             };
 
+            updateTelemetryChart(resting_v, crank_v, running_v, running_v - load_drop);
+
             try {
                 const response = await fetch('/api/predict', {
                     method: 'POST',
@@ -388,10 +693,9 @@
 
             } catch (err) {
                 console.error("Diagnostic error:", err);
-                alert("تعذر الاتصال بخادم الذكاء الاصطناعي.");
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-microchip text-base ml-2"></i><span>تشغيل الفحص والتشخيص الذكي (Run AI Diagnostic)</span>';
+                btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles text-base ml-2"></i><span>تشغيل الفحص والتشخيص الذكي (Run AI Diagnostic Scan)</span>';
             }
         }
 
@@ -404,24 +708,24 @@
             const driveBadge = document.getElementById('driveability_badge');
 
             if (data.risk_level === 'LOW') {
-                badgeRisk.className = "px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                badgeRisk.className = "px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
                 badgeRisk.innerText = "سليم ومستقر (LOW)";
-                driveBadge.className = "flex items-center p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-semibold";
-                driveBadge.innerHTML = '<i class="fa-solid fa-shield-halved text-base ml-2"></i><span>القيادة آمنة تماماً ولا توجد مخاطر على المنظومة الكهربائية.</span>';
+                driveBadge.className = "flex items-center p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-semibold";
+                driveBadge.innerHTML = '<i class="fa-solid fa-shield-halved text-base ml-2.5"></i><span>القيادة آمنة تماماً ولا توجد مخاطر على المنظومة الكهربائية.</span>';
             } else if (data.risk_level === 'MEDIUM') {
-                badgeRisk.className = "px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30";
+                badgeRisk.className = "px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30";
                 badgeRisk.innerText = "تحذير متوسط (MEDIUM)";
-                driveBadge.className = "flex items-center p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-semibold";
-                driveBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-base ml-2"></i><span>القيادة ممكنة بحذر حتى أقرب مركز صيانة.</span>';
+                driveBadge.className = "flex items-center p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-semibold";
+                driveBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-base ml-2.5"></i><span>القيادة ممكنة بحذر حتى أقرب مركز صيانة.</span>';
             } else {
-                badgeRisk.className = "px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 animate-pulse";
+                badgeRisk.className = "px-3 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-400 border border-rose-500/30 animate-pulse";
                 badgeRisk.innerText = "خطر حرج (CRITICAL)";
-                driveBadge.className = "flex items-center p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-semibold";
-                driveBadge.innerHTML = '<i class="fa-solid fa-hand text-base ml-2"></i><span>غير آمن للقيادة! خطر انطفاء المحرك المفاجئ أو تلف الحواسيب.</span>';
+                driveBadge.className = "flex items-center p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-semibold";
+                driveBadge.innerHTML = '<i class="fa-solid fa-hand text-base ml-2.5"></i><span>غير آمن للقيادة! خطر انطفاء المحرك المفاجئ أو تلف الحواسيب.</span>';
             }
         }
 
-        // Chat Logic
+        // Chat Logic with Live LLM Call
         async function handleChatSubmit(e) {
             e.preventDefault();
             const input = document.getElementById('chat_input');
@@ -434,7 +738,6 @@
             const sendBtn = document.getElementById('btn_send_chat');
             sendBtn.disabled = true;
 
-            // Append temporary thinking bubble
             const thinkingId = appendThinkingBubble();
 
             try {
@@ -450,16 +753,14 @@
 
                 const data = await response.json();
                 removeThinkingBubble(thinkingId);
-                appendMessage('assistant', data.response_ar);
+                appendMessage('assistant', data.response_ar, data.model, data.latency_ms);
 
-                // Update chat history
                 chatHistory.push({ role: 'user', content: message });
                 chatHistory.push({ role: 'assistant', content: data.response_ar });
 
             } catch (err) {
-                console.error("Chat error:", err);
                 removeThinkingBubble(thinkingId);
-                appendMessage('assistant', "⚠️ حدث خطأ أثناء الاتصال بالمساعد الذكي. يرجى المحاولة لاحقاً.");
+                appendMessage('assistant', "⚠️ حدث خطأ أثناء الاتصال بالخادم. يرجى التأكد من تشغيل السيرفر.");
             } finally {
                 sendBtn.disabled = false;
             }
@@ -470,7 +771,7 @@
             document.getElementById('btn_send_chat').click();
         }
 
-        function appendMessage(role, text) {
+        function appendMessage(role, text, model = null, latency = 0) {
             const container = document.getElementById('chat_messages');
             const msgDiv = document.createElement('div');
 
@@ -480,18 +781,27 @@
                     <div class="chat-bubble-user p-3.5 rounded-2xl shadow-sm max-w-[85%] leading-relaxed text-xs">
                         ${escapeHtml(text)}
                     </div>
-                    <div class="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5">
+                    <div class="w-8 h-8 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 text-xs flex-shrink-0 mt-0.5">
                         <i class="fa-solid fa-user"></i>
                     </div>
                 `;
             } else {
-                msgDiv.className = "flex items-start space-x-2.5 space-x-reverse";
+                let badgeHtml = '';
+                if (model && latency > 0) {
+                    badgeHtml = `<div class="mt-2 text-[10px] text-slate-400 font-mono flex items-center space-x-1.5 space-x-reverse border-t border-slate-700/40 pt-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
+                        <span>Generated by ${model} (${latency}ms)</span>
+                    </div>`;
+                }
+
+                msgDiv.className = "flex items-start space-x-3 space-x-reverse";
                 msgDiv.innerHTML = `
-                    <div class="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5 shadow-md">
                         <i class="fa-solid fa-robot"></i>
                     </div>
-                    <div class="chat-bubble-assistant p-3.5 rounded-2xl shadow-sm max-w-[85%] leading-relaxed text-slate-800 text-xs">
+                    <div class="chat-bubble-assistant p-4 rounded-2xl shadow-sm max-w-[88%] leading-relaxed text-slate-200 text-xs">
                         ${formatMarkdown(text)}
+                        ${badgeHtml}
                     </div>
                 `;
             }
@@ -505,14 +815,14 @@
             const id = 'thinking_' + Date.now();
             const msgDiv = document.createElement('div');
             msgDiv.id = id;
-            msgDiv.className = "flex items-start space-x-2.5 space-x-reverse";
+            msgDiv.className = "flex items-start space-x-3 space-x-reverse";
             msgDiv.innerHTML = `
-                <div class="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5 animate-pulse">
+                <div class="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5 animate-pulse">
                     <i class="fa-solid fa-robot"></i>
                 </div>
-                <div class="chat-bubble-assistant p-3 rounded-2xl shadow-sm text-slate-500 text-xs flex items-center space-x-2 space-x-reverse">
-                    <i class="fa-solid fa-spinner fa-spin"></i>
-                    <span>الميكانيكي الذكي يحلل القراءات ويفكر...</span>
+                <div class="chat-bubble-assistant p-3.5 rounded-2xl shadow-sm text-slate-400 text-xs flex items-center space-x-2 space-x-reverse">
+                    <i class="fa-solid fa-circle-notch fa-spin text-cyan-400"></i>
+                    <span>الميكانيكي الذكي يحلل القراءات ويتصل بالمزود...</span>
                 </div>
             `;
             container.appendChild(msgDiv);
@@ -529,15 +839,135 @@
             chatHistory = [];
             const container = document.getElementById('chat_messages');
             container.innerHTML = `
-                <div class="flex items-start space-x-2.5 space-x-reverse">
-                    <div class="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5">
+                <div class="flex items-start space-x-3 space-x-reverse">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5 shadow-md">
                         <i class="fa-solid fa-robot"></i>
                     </div>
-                    <div class="chat-bubble-assistant p-3.5 rounded-2xl shadow-sm max-w-[85%] leading-relaxed text-slate-800 text-xs">
-                        تمت إعادة تهيئة المحادثة. كيف يمكنني مساعدتك بخصوص كهرباء سيارتك اليوم؟ ⚡
+                    <div class="chat-bubble-assistant p-4 rounded-2xl shadow-sm max-w-[88%] leading-relaxed text-slate-200 text-xs">
+                        تمت إعادة تهيئة المحادثة. كيف يمكنني مساعدتك في فحص كهرباء سيارتك؟ ⚡
                     </div>
                 </div>
             `;
+        }
+
+        // Settings Modal Handlers
+        async function openSettingsModal() {
+            document.getElementById('settings_modal').classList.remove('hidden');
+            // Fetch current non-sensitive settings
+            try {
+                const res = await fetch('/api/settings/current');
+                const data = await res.json();
+                document.getElementById('modal_base_url').value = data.base_url;
+                document.getElementById('modal_model_name').value = data.model_name;
+            } catch (e) {}
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settings_modal').classList.add('hidden');
+        }
+
+        function toggleKeyVisibility() {
+            const inp = document.getElementById('modal_api_key');
+            const icon = document.getElementById('eye_icon');
+            if (inp.type === 'password') {
+                inp.type = 'text';
+                icon.className = "fa-solid fa-eye-slash text-xs";
+            } else {
+                inp.type = 'password';
+                icon.className = "fa-solid fa-eye text-xs";
+            }
+        }
+
+        function handleProviderChange() {
+            const provider = document.getElementById('modal_provider_select').value;
+            const baseUrlInp = document.getElementById('modal_base_url');
+            const modelInp = document.getElementById('modal_model_name');
+
+            if (provider === 'deepseek') {
+                baseUrlInp.value = "https://api.deepseek.com/v1";
+                modelInp.value = "deepseek-chat";
+            } else if (provider === 'openai') {
+                baseUrlInp.value = "https://api.openai.com/v1";
+                modelInp.value = "gpt-4o-mini";
+            } else if (provider === 'groq') {
+                baseUrlInp.value = "https://api.groq.com/openai/v1";
+                modelInp.value = "llama-3.3-70b-versatile";
+            } else if (provider === 'openrouter') {
+                baseUrlInp.value = "https://openrouter.ai/api/v1";
+                modelInp.value = "meta-llama/llama-3.3-70b-instruct";
+            }
+        }
+
+        async function testAPIConnectionFromModal() {
+            const btn = document.getElementById('btn_modal_test');
+            const resBox = document.getElementById('modal_test_result');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-1.5"></i> جاري الاختبار...';
+
+            const payload = {
+                api_key: document.getElementById('modal_api_key').value,
+                base_url: document.getElementById('modal_base_url').value,
+                model_name: document.getElementById('modal_model_name').value
+            };
+
+            try {
+                const res = await fetch('/api/settings/test-key', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                resBox.classList.remove('hidden');
+                if (data.success) {
+                    resBox.className = "p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs space-y-1";
+                    resBox.innerHTML = `
+                        <div class="font-bold flex items-center"><i class="fa-solid fa-check-circle ml-1.5"></i> الاتصال ناجح ومفعل!</div>
+                        <div class="text-[11px] text-slate-300">المزود: ${data.model} | زمن الاستجابة: ${data.latency_ms}ms</div>
+                    `;
+                } else {
+                    resBox.className = "p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs space-y-1";
+                    resBox.innerHTML = `
+                        <div class="font-bold flex items-center"><i class="fa-solid fa-triangle-exclamation ml-1.5"></i> فشل الاتصال بالمزود</div>
+                        <div class="text-[11px] text-slate-300">${data.error_message}</div>
+                    `;
+                }
+            } catch (e) {
+                resBox.classList.remove('hidden');
+                resBox.className = "p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs";
+                resBox.innerText = "فشل إرسال طلب الاختبار إلى السيرفر.";
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-plug-circle-bolt ml-1.5"></i><span>اختبار الاتصال اللحظي</span>';
+            }
+        }
+
+        async function saveAPISettings() {
+            const btn = document.getElementById('btn_modal_save');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-1.5"></i> جاري الحفظ...';
+
+            const payload = {
+                api_key: document.getElementById('modal_api_key').value,
+                base_url: document.getElementById('modal_base_url').value,
+                model_name: document.getElementById('modal_model_name').value
+            };
+
+            try {
+                const res = await fetch('/api/settings/update-key', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                closeSettingsModal();
+                checkLiveAPIStatus();
+            } catch (e) {
+                alert("تعذر حفظ الإعدادات.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk ml-1.5"></i><span>حفظ وتطبيق</span>';
+            }
         }
 
         function escapeHtml(text) {
@@ -550,6 +980,7 @@
             return text
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                 .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code class="bg-slate-800 px-1 py-0.5 rounded text-cyan-300 font-mono">$1</code>')
                 .replace(/\n/g, '<br>');
         }
     </script>

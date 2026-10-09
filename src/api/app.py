@@ -3,7 +3,7 @@ Smart OBD-II Electrical Diagnostic System
 Module: FastAPI Inference & Advisory Server
 
 Provides high-performance REST APIs for Mobile Application (Flutter / Android / iOS)
-and ESP32 edge telemetry gateways.
+and Web Dashboard with dynamic LLM provider configuration and real-time testing.
 """
 
 import os
@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 # Ensure UTF-8 output on Windows
 if sys.platform == "win32":
@@ -28,10 +29,12 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 from src.api.schemas import (
+    APIConfigSchema,
     DiagnosticAlertResponse,
     MechanicChatRequest,
     MechanicChatResponse,
     TelemetryInputSchema,
+    TestKeyResponseSchema,
 )
 from src.rules_nlp.arabic_alert_engine import ArabicAlertEngine
 from src.rules_nlp.llm_advisory import AutomotiveLLMAdvisor
@@ -39,7 +42,7 @@ from src.rules_nlp.llm_advisory import AutomotiveLLMAdvisor
 app = FastAPI(
     title="Smart OBD-II Electrical Diagnostic AI API",
     description="Predictive maintenance and Arabic AI mechanic advisor for vehicle electrical systems.",
-    version="1.0.0",
+    version="1.1.0",
 )
 
 # Enable CORS for Mobile Apps (Flutter, React Native, Web Dashboards)
@@ -66,9 +69,6 @@ except Exception as e:
 # Initialize LLM Advisor
 advisor = AutomotiveLLMAdvisor()
 
-
-from fastapi.responses import HTMLResponse
-
 STATIC_INDEX_PATH = PROJECT_ROOT / "src" / "api" / "static" / "index.html"
 
 
@@ -85,12 +85,13 @@ def root():
 def system_status():
     return {
         "system": "Smart OBD-II Electrical Diagnostic System",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "status": "Online",
         "models_loaded": rf_model is not None,
+        "llm_provider": advisor.base_url,
+        "llm_model": advisor.model_name,
         "docs_url": "/docs",
     }
-
 
 
 @app.post("/api/predict", response_model=DiagnosticAlertResponse)
@@ -166,15 +167,85 @@ def predict_electrical_health(payload: TelemetryInputSchema):
 @app.post("/api/advisor/chat", response_model=MechanicChatResponse)
 def chat_with_mechanic_endpoint(request: MechanicChatRequest):
     """
-    Interactive conversation with AI Mechanic Consultant.
+    Interactive conversation with AI Mechanic Consultant via live LLM.
     """
     history_dicts = [{"role": msg.role, "content": msg.content} for msg in request.chat_history]
-    answer = advisor.chat_with_mechanic(
+    result = advisor.chat_with_mechanic(
         chat_history=history_dicts,
         user_message=request.message,
         vehicle_context=request.vehicle_context,
     )
-    return MechanicChatResponse(response_ar=answer)
+    return MechanicChatResponse(
+        response_ar=result["response_ar"],
+        status="success" if result.get("success") else "error",
+        latency_ms=result.get("latency_ms", 0),
+        model=result.get("model", advisor.model_name),
+        source=result.get("source", "LIVE_LLM_API"),
+    )
+
+
+@app.post("/api/settings/test-key", response_model=TestKeyResponseSchema)
+def test_llm_key(config: Optional[APIConfigSchema] = None):
+    """
+    Tests live connection with the specified or current API Key and Provider.
+    """
+    if config and config.api_key:
+        test_advisor = AutomotiveLLMAdvisor(
+            api_key=config.api_key,
+            base_url=config.base_url,
+            model_name=config.model_name,
+        )
+        res = test_advisor.test_connection()
+    else:
+        res = advisor.test_connection()
+
+    return TestKeyResponseSchema(
+        success=res["success"],
+        status_code=res["status_code"],
+        latency_ms=res["latency_ms"],
+        provider=res["provider"],
+        model=res["model"],
+        message=res.get("message"),
+        error_message=res.get("error_message"),
+    )
+
+
+@app.post("/api/settings/update-key")
+def update_llm_settings(config: APIConfigSchema):
+    """
+    Updates the active API Key, Base URL, and Model in runtime memory and .env file.
+    """
+    advisor.update_config(
+        api_key=config.api_key,
+        base_url=config.base_url,
+        model_name=config.model_name,
+    )
+    return {
+        "status": "success",
+        "message": "تم تحديث إعدادات مزود الذكاء الاصطناعي بنجاح وحفظها.",
+        "active_model": advisor.model_name,
+        "active_provider": advisor.base_url,
+    }
+
+
+@app.get("/api/settings/current")
+def get_current_settings():
+    """
+    Returns non-sensitive configuration details.
+    """
+    masked_key = ""
+    if advisor.api_key:
+        if len(advisor.api_key) > 8:
+            masked_key = advisor.api_key[:4] + "..." + advisor.api_key[-4:]
+        else:
+            masked_key = "****"
+            
+    return {
+        "has_key": bool(advisor.api_key),
+        "masked_key": masked_key,
+        "base_url": advisor.base_url,
+        "model_name": advisor.model_name,
+    }
 
 
 if __name__ == "__main__":
